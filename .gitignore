@@ -1,0 +1,48 @@
+# ── Environment ──────────────────────────────────────────────
+.env
+*.env
+.env.local
+
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+*.pkl
+*.joblib
+
+# ── Data files (keep sample data, ignore real data) ──────────
+data/bronze/
+data/silver/
+data/gold/
+data/dead_letter/
+data/raw/*.zip
+data/raw/*.parquet
+!data/raw/sample_*.csv
+
+# ── Airflow ───────────────────────────────────────────────────
+logs/
+airflow.db
+airflow.cfg
+standalone_admin_password.txt
+
+# ── Notebooks ────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ── IDE ───────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Coverage ──────────────────────────────────────────────────
+.coverage
+coverage.xml
+htmlcov/
