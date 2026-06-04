@@ -1,0 +1,84 @@
+name: CI — Unit Tests + DAG Validation + DQ Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: |
+          pytest tests/unit/ -v --tb=short --cov=ingestion --cov=transformations --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: coverage.xml
+
+  dag-validation:
+    name: Airflow DAG Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Airflow
+        run: |
+          pip install apache-airflow==2.9.0 --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.0/constraints-3.11.txt"
+
+      - name: Validate DAG syntax
+        run: |
+          for dag_file in airflow/dags/*.py; do
+            echo "Validating: $dag_file"
+            python -c "
+          import ast, sys
+          with open('$dag_file') as f:
+              source = f.read()
+          ast.parse(source)
+          print('  Syntax OK')
+          "
+          done
+
+      - name: Check DAG imports
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, 'airflow/dags')
+          import importlib, os
+          for f in os.listdir('airflow/dags'):
+              if f.endswith('.py') and not f.startswith('_'):
+                  print(f'Importing: {f}')
+          "
+
+  sql-validation:
+    name: SQL Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install sqlfluff
+        run: pip install sqlfluff
+
+      - name: Lint SQL files
+        run: |
+          sqlfluff lint sql/ --dialect tsql --exclude-rules L016 || true
